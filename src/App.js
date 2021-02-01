@@ -1,8 +1,8 @@
 import React from 'react'
 import mapboxgl from 'mapbox-gl';
 import ReactMapGL, {Marker} from "react-map-gl";
-import axios from 'axios';
-axios.defaults.baseURL = `https://malolos.herokuapp.com/api`
+// import axios from 'axios';
+// axios.defaults.baseURL = `https://malolos.herokuapp.com/api`
 
 function App() {
 
@@ -14,24 +14,24 @@ function App() {
     latitude: 14.8527,
     zoom: 12
   })
-  const [locations, setLocations] = React.useState(null)
-  const getLocations = React.useCallback(async () => {
-    const res = await axios.get(`/locations`)
-    console.table(res.data.locations)
-    if(!res.data.success) return
-    setLocations(res.data.locations)
-  },[])
+  // const [locations, setLocations] = React.useState(null)
+  // const getLocations = React.useCallback(async () => {
+  //   const res = await axios.get(`/locations`)
+  //   console.table(res.data.locations)
+  //   if(!res.data.success) return
+  //   setLocations(res.data.locations)
+  // },[])
 
-  React.useEffect(() => {
-    let cancelled = false
-    if (!cancelled) getLocations()
-    return () => cancelled = true
-  },[getLocations])
+  // React.useEffect(() => {
+  //   let cancelled = false
+  //   if (!cancelled) getLocations()
+  //   return () => cancelled = true
+  // },[getLocations])
   
   const sample = [
     {
-      lng: 120.8160,
-      lat: 14.8527
+      longitude: 120.8160,
+      latitude: 14.8527
     }
   ]
 
@@ -42,7 +42,7 @@ function App() {
         mapboxApiAccessToken='pk.eyJ1IjoieWFhY29ibWFydGluZXoiLCJhIjoiY2tjNDlqYTB1MDVyajMzcmlvMjMxdW01OCJ9.6S3KsotDYdk70Y9zmxw28w'
         mapStyle='mapbox://styles/mapbox/streets-v9'
         onViewportChange={setCoords}>
-          {locations?.map((location, index) => (
+          {sample?.map((location, index) => (
             <LocationMarker key={index} location={location} />
           ))}
         </ReactMapGL>

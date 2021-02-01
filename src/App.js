@@ -28,12 +28,12 @@ function App() {
     return () => cancelled = true
   },[getLocations])
   
-  const sample = [
-    {
-      longitude: 120.8160,
-      latitude: 14.8527
-    }
-  ]
+  // const sample = [
+  //   {
+  //     longitude: 120.8160,
+  //     latitude: 14.8527
+  //   }
+  // ]
 
   return (
     <div>

@@ -1,25 +1,68 @@
-import logo from './logo.svg';
-import './App.css';
+import React from 'react'
+import mapboxgl from 'mapbox-gl';
+import ReactMapGL, {Marker} from "react-map-gl";
+import axios from 'axios';
+axios.defaults.baseURL = `https://malolos.herokuapp.com/api`
 
 function App() {
+
+  
+  const [coords, setCoords] = React.useState({
+    height: "100vh",
+    width: "100vw",
+    longitude: 120.8160, 
+    latitude: 14.8527,
+    zoom: 12
+  })
+  const [locations, setLocations] = React.useState(null)
+  const getLocations = React.useCallback(async () => {
+    const res = await axios.get(`/locations`)
+    console.table(res.data.locations)
+    if(!res.data.success) return
+    setLocations(res.data.locations)
+  },[])
+
+  React.useEffect(() => {
+    let cancelled = false
+    if (!cancelled) getLocations()
+    return () => cancelled = true
+  },[getLocations])
+  
+  const sample = [
+    {
+      lng: 120.8160,
+      lat: 14.8527
+    }
+  ]
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      <ReactMapGL
+        {...coords}
+        mapboxApiAccessToken='pk.eyJ1IjoieWFhY29ibWFydGluZXoiLCJhIjoiY2tjNDlqYTB1MDVyajMzcmlvMjMxdW01OCJ9.6S3KsotDYdk70Y9zmxw28w'
+        mapStyle='mapbox://styles/mapbox/streets-v9'
+        onViewportChange={setCoords}>
+          {locations?.map((location, index) => (
+            <LocationMarker key={index} location={location} />
+          ))}
+        </ReactMapGL>
     </div>
   );
 }
 
 export default App;
+
+const LocationMarker = ({location}) => {
+
+  const latlng = new mapboxgl.LngLat(location.longitude, location.latitude)
+  return (
+    <Marker 
+      offsetTop={-48}
+      offsetLeft={-24}
+      latitude={latlng.lat}
+      longitude={latlng.lng}
+    >
+      <img src={`./logo_final.png`} alt='marker' style={{width: 20}}/>
+    </Marker>
+  )
+}

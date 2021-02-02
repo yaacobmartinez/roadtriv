@@ -1,7 +1,7 @@
 import { makeStyles, Typography } from '@material-ui/core'
 import React from 'react'
 import BottomNavBar from './BottomNavBar'
-import Lottie, { useLottie } from 'lottie-react'
+import Lottie from 'lottie-react'
 import animationData from '../46997-color-preloader.json'
 import axios from 'axios'
 
@@ -81,11 +81,6 @@ const useStyles = makeStyles((theme) =>({
 }))
 function Home() {
     const classes = useStyles()
-    const loadingOptions = {
-        loop: true, 
-        autoplay: true, 
-        animationData: animationData
-    }
     const categories = ['Places', 'Culture', 'Food']
     const [categorySelected, setCategorySelected] = React.useState('Places')
     const [featuredPlaces, setFeaturedPlaces] = React.useState(null)

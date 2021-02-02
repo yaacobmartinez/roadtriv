@@ -12,7 +12,7 @@ const Map = () => {
         width: "100vw",
         longitude: 120.8160, 
         latitude: 14.8527,
-        zoom: 15
+        zoom: 13
       })
       const [locations, setLocations] = React.useState(null)
       const getLocations = React.useCallback(async () => {

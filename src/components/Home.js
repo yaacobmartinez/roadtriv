@@ -143,9 +143,6 @@ const Panel = ({panel, images}) => {
     const classes = useStyles() 
     const image = images[0].url
     const [open, setOpen] = React.useState(false)
-    const onClose= () =>{
-        setOpen(!open)
-    }
     return (
         <React.Fragment>
             <div className={classes.panel} onClick={() => setOpen(true)}>

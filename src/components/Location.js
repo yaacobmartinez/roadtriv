@@ -43,7 +43,6 @@ const useStyles = makeStyles((theme) => ({
 }))
 const Location = ({location, images, open, handleClose}) => {
     const classes = useStyles()
-    const [selectedImage, setSelectedImage] = React.useState(images[0])
     const [isViewerOpen, setIsViewerOpen] = React.useState(false)
     const imageUrls = images.map((image) => image.url)
     return (
@@ -57,7 +56,7 @@ const Location = ({location, images, open, handleClose}) => {
                     </Toolbar>
                 </AppBar>
                 <div className={classes.panel}>
-                    <img src={selectedImage.url} alt='primary' 
+                    <img src={images[0].url} alt='primary' 
                         className={classes.image}
                         onClick={() =>setIsViewerOpen(true)}    
                     />

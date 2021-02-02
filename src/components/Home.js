@@ -1,9 +1,10 @@
-import { makeStyles, Typography } from '@material-ui/core'
+import {  makeStyles, Typography } from '@material-ui/core'
 import React from 'react'
 import BottomNavBar from './BottomNavBar'
 import Lottie from 'lottie-react'
 import animationData from '../46997-color-preloader.json'
 import axios from 'axios'
+import Location from './Location'
 
 const useStyles = makeStyles((theme) =>({
     root: {
@@ -84,18 +85,27 @@ function Home() {
     const categories = ['Places', 'Culture', 'Food']
     const [categorySelected, setCategorySelected] = React.useState('Places')
     const [featuredPlaces, setFeaturedPlaces] = React.useState(null)
+    const [images, setImages] = React.useState(null)
     const getplaces = React.useCallback( async() => {
         const res = await axios.get(`/locations`)
         if (!res.data.success) return 
-        console.log(res.data)
         setFeaturedPlaces((res.data.locations).slice(10,28))
     },[])
 
+    const getImages = React.useCallback( async() => {
+        const res = await axios.get(`/images`)
+        if (!res.data.success) return 
+        setImages(res.data.images)
+    }, [])
+
     React.useEffect(() => {
         let cancelled = false
-        if (!cancelled) getplaces()
+        if (!cancelled) {
+            getImages();
+            getplaces();
+        }
         return () => cancelled = true
-    }, [getplaces])
+    }, [getplaces, getImages])
 
     if (!featuredPlaces) return <Lottie animationData={animationData} className={classes.loader} />
     return (
@@ -116,8 +126,8 @@ function Home() {
                     }
                 </div>
                 <div className={classes.panels}>
-                    {categorySelected === 'Places' && featuredPlaces?.map((place, index) => (
-                        <Panel key={index} panel={place} />
+                    {categorySelected === 'Places' && images && featuredPlaces?.map((place, index) => (
+                        <Panel key={index} panel={place} images={images.filter((image) => image.location === place._id)}/>
                     ))}
                 </div>
             </div>
@@ -129,14 +139,23 @@ function Home() {
 
 export default Home
 
-const Panel = ({panel}) => {
+const Panel = ({panel, images}) => {
     const classes = useStyles() 
-    const image = `https://images.pexels.com/photos/4393464/pexels-photo-4393464.jpeg?cs=srgb&dl=pexels-jan-karan-4393464.jpg&fm=jpg`
+    const image = images[0].url
+    const [open, setOpen] = React.useState(false)
+    const onClose= () =>{
+        setOpen(!open)
+    }
     return (
-        <div className={classes.panel}>
-            <img src={image} alt='dummy' className={classes.panel_image} />
-            <div className={classes.panel_title}>
-                <Typography variant='body2'>{panel.name}</Typography></div>
-        </div>
+        <React.Fragment>
+            <div className={classes.panel} onClick={() => setOpen(true)}>
+                <img src={image} alt='dummy' className={classes.panel_image} />
+                <div className={classes.panel_title}>
+                    <Typography variant='body2'>{panel.name}</Typography>
+                </div>
+            </div>
+            <Location location={panel} images={images} open={open} handleClose={() => setOpen(false)} />
+        </React.Fragment>
     )
 } 
+

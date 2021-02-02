@@ -55,7 +55,7 @@ function Welcome() {
         let cancelled = false
         setTimeout(() => {
             if (!cancelled) push('/home') 
-        }, 2000);
+        }, 5000);
         return () => cancelled = true
     },[push])
 

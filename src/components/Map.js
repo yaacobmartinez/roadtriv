@@ -69,6 +69,7 @@ const Map = () => {
                 style={geolocateControlStyle}
                 positionOptions={{enableHighAccuracy: true}}
                 trackUserLocation={true}
+                fitBoundsOptions={{zoom: 13}}
                 auto
             />
             {locations?.map((location, index) => (

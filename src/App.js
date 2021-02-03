@@ -18,15 +18,29 @@ const theme = createMuiTheme({
 
 function App() {
 
+  const [weather, setWeather] = React.useState(null)
+    const getWeather = React.useCallback(async() => {
+        const weatherAxios = axios.create({
+            baseURL: `https://api.openweathermap.org/data/2.5`
+        })
+        const res = await weatherAxios.get(`/onecall?lat=14.8527&lon=120.8160&exclude=minutely,hourly&appid=dd29aed5cc6af856d92740131374a63c&units=metric`)
+        setWeather(res.data)
+    },[])
+    React.useEffect(() => {
+        let cancelled = false
+        if (!cancelled) getWeather()
+        return() => cancelled = true
+    },[getWeather])
+
   return (
     <div>
       <Router>
         <ThemeProvider theme={theme}>
           <Switch>
             <Route exact path='/' component={Welcome} />
-            <Route exact path='/home' component={Home} />
+            <Route exact path='/home' component={() => <Home weather={weather} />} />
             <Route exact path='/map' component={Map} />
-            <Route exact path='/weather' component={Weather} />
+            <Route exact path='/weather' component={ () => <Weather weather={weather} />} />
             <Route exact path='/search' component={Search} />
           </Switch>
         </ThemeProvider>

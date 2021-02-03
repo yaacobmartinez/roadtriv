@@ -5,12 +5,16 @@ import Lottie from 'lottie-react'
 import animationData from '../46997-color-preloader.json'
 import axios from 'axios'
 import Location from './Location'
+import WeatherWidget from './WeatherWidget'
+import UsefulInfo from './UsefulInfo'
+import Information from './Information'
 
 const useStyles = makeStyles((theme) =>({
     root: {
-        height: '100vh',
+        // height: '100vh',
         width: '100vw',
         backgroundColor: theme.mint,
+        paddingBottom: 100,
         overflowY: 'hidden',
         overflowX: 'hidden'
     },
@@ -50,7 +54,7 @@ const useStyles = makeStyles((theme) =>({
     },
     panel: {
         flex: 1, 
-        height: 400, 
+        height: 380, 
         width: 250,
         position: 'relative',
         '&::after' :{
@@ -73,14 +77,14 @@ const useStyles = makeStyles((theme) =>({
     panel_title: {
         position: 'relative',
         width: 210,
-        height: 100,
+        height: 50,
         color: '#fff', 
         zIndex: 1,
         left: 10,
         bottom: theme.spacing(6),
     }
 }))
-function Home() {
+function Home({weather}) {
     const classes = useStyles()
     const categories = ['Places', 'Culture', 'Food']
     const [categorySelected, setCategorySelected] = React.useState('Places')
@@ -107,6 +111,33 @@ function Home() {
         return () => cancelled = true
     }, [getplaces, getImages])
 
+    const cultures = [
+        {
+            uri : `https://www.bulakenyo.ph/wp-content/uploads/2018/09/bulacan-6.jpg`, 
+            name: `Bulakenyo Vocabularies`, 
+            // sub: `Arts and Culture`,
+            slug: `KuwentongBayan`
+        },
+        {
+            uri : `https://www.bworldonline.com/wp-content/uploads/2017/02/feature_trav-640x256.jpg`, 
+            // name: `Tradition`, 
+            name: `Festivals and Events`,
+            slug: `Tradition`
+        },
+        {
+            uri : `https://images.gmanews.tv/v3/webpics/v3/2014/03/2014_03_29_11_33_11.JPG`, 
+            // name: `Delicacies`, 
+            name: `Food and Cuisine`,
+            slug: `Delicacies`
+        },
+        {
+            uri : `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSVA4PhH4DsRajvPa7G1EF9m_vXY1y3ZjrD6Q&usqp=CAU`, 
+            name: `People`, 
+            // sub: `Malolenos`,
+            slug: `People`
+        },
+    ]
+
     if (!featuredPlaces) return <Lottie animationData={animationData} className={classes.loader} />
     return (
         <div className={classes.root}>
@@ -129,9 +160,16 @@ function Home() {
                     {categorySelected === 'Places' && images && featuredPlaces?.map((place, index) => (
                         <Panel key={index} panel={place} images={images.filter((image) => image.location === place._id)}/>
                     ))}
+                    {categorySelected === 'Culture' && cultures.map((culture, index) => (
+                        <InfoPanel key={index} info={culture}/>
+                    ))}
+                    {categorySelected === 'Food' && images && featuredPlaces?.filter((p) =>p.category === 'Café' || p.category === 'Restaurant').map((place, index) => (
+                        <Panel key={index} panel={place} images={images.filter((image) => image.location === place._id)}/>
+                    ))}
                 </div>
             </div>
-            
+            <WeatherWidget current={weather.current} />
+            <UsefulInfo />
             <BottomNavBar />
         </div>
     )
@@ -152,6 +190,22 @@ const Panel = ({panel, images}) => {
                 </div>
             </div>
             <Location location={panel} images={images} open={open} handleClose={() => setOpen(false)} />
+        </React.Fragment>
+    )
+} 
+
+const InfoPanel = ({info}) => {
+    const classes = useStyles() 
+    const [open, setOpen] = React.useState(false)
+    return (
+        <React.Fragment>
+            <div className={classes.panel} onClick={() => setOpen(true)}>
+                <img src={info.uri} alt='dummy' className={classes.panel_image} />
+                <div className={classes.panel_title}>
+                    <Typography variant='body2'>{info.name}</Typography>
+                </div>
+            </div>
+            <Information open={open} info={info} handleClose={() => setOpen(false)} />
         </React.Fragment>
     )
 } 

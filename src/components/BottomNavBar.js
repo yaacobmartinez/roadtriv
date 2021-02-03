@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 const useStyles = makeStyles((theme) =>({
     root: {
-        position: 'absolute', bottom: 0, width: '100%', paddingTop: 10, paddingBottom: 10, 
+        zIndex: 1001, position: 'fixed', bottom: 0, width: '100%', paddingTop: 10, paddingBottom: 10, 
     }
 }))
 function BottomNavBar({...rest}){

@@ -1,11 +1,11 @@
 import React from 'react'
-import ReactMapGL, {Marker, GeolocateControl} from 'react-map-gl'
+import ReactMapGL, {Marker, GeolocateControl,} from 'react-map-gl'
 import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl from 'mapbox-gl';
 import axios from 'axios';
 import BottomNavBar from './BottomNavBar';
-import { Room, Search } from '@material-ui/icons';
-import { IconButton, InputBase, makeStyles, Paper } from '@material-ui/core'
+import { ArrowForward,  Close, Room, Search } from '@material-ui/icons';
+import { IconButton, InputBase, List, ListItem, ListItemText, makeStyles, Paper, Slide, Typography } from '@material-ui/core'
 import Lottie from 'lottie-react'
 import animationData from '../46997-color-preloader.json'
 
@@ -25,6 +25,24 @@ const useStyles = makeStyles((theme)=>({
     search_input:{
         marginLeft: theme.spacing(1),
         flex: 1,
+    },
+    selected: {
+        width: '90vw',
+        maxHeight: 100, 
+        position: 'absolute', 
+        bottom: 76,
+        marginLeft: '5vw',
+        marginBottom: 10
+    },
+    selectedPanel: {
+        padding: theme.spacing(2),
+        display: 'flex',
+        justifyContent: 'space-around'
+    },
+    selected_name: {
+        fontSize: '1rem',
+        fontWeight: 'bold',
+        lineHeight: 1
     }
 }))
 const Map = () => {
@@ -44,10 +62,13 @@ const Map = () => {
         zoom: 13
       })
       const [locations, setLocations] = React.useState(null)
+      const [markers, setMarkers] = React.useState(null)
+      const [selectedLocation, setSelectedLocation] = React.useState(null)
       const getLocations = React.useCallback(async () => {
         const res = await axios.get(`/locations`)
         if(!res.data.success) return
         setLocations(res.data.locations)
+        setMarkers(res.data.locations)
       },[])
     
       React.useEffect(() => {
@@ -56,7 +77,28 @@ const Map = () => {
         return () => cancelled = true
       },[getLocations])
       
-      if (!locations) return <Lottie animationData={animationData} className={classes.loader} />
+      const filterByValue = (array, string) => {
+        return array.filter(o => {     	
+          return Object.keys(o).some(k => {       	
+            if(typeof o[k] === 'string') {
+                return o[k].toLowerCase().includes(string.toLowerCase())
+            }else{
+                return null
+            }   
+          });      
+        });
+      } 
+
+      const handleSearch = (key) => {
+          return filterByValue(locations, key)
+      } 
+
+      const handleCoordinateChange = (latitude, longitude, zoom, location) =>{
+        setMarkers(locations.filter((loc) => loc._id === location._id))
+        setCoords({...coords, latitude, longitude, zoom})
+        setSelectedLocation(location)
+      }
+      if (!markers) return <Lottie animationData={animationData} className={classes.loader} />
     return (
     <div>
         <ReactMapGL
@@ -64,17 +106,20 @@ const Map = () => {
         mapboxApiAccessToken='pk.eyJ1IjoieWFhY29ibWFydGluZXoiLCJhIjoiY2tjNDlqYTB1MDVyajMzcmlvMjMxdW01OCJ9.6S3KsotDYdk70Y9zmxw28w'
         mapStyle='mapbox://styles/mapbox/streets-v9'
         onViewportChange={setCoords}>
-            <SearchPanel />
             <GeolocateControl
                 style={geolocateControlStyle}
                 positionOptions={{enableHighAccuracy: true}}
                 trackUserLocation={true}
-                fitBoundsOptions={{zoom: 13}}
+                fitBoundsOptions={{maxZoom: 13}}
                 auto
             />
-            {locations?.map((location, index) => (
-            <LocationMarker key={index} location={location} />
-            ))}
+            {markers?.map((location, index) => (
+                <LocationMarker key={index} location={location} handleClick={()=> setSelectedLocation(location)}/>
+                ))}
+        <SearchPanel callback={handleSearch} onChange={handleCoordinateChange}/>
+        {selectedLocation && (
+            <SelectedLocation location={selectedLocation} onClose={() => setSelectedLocation(null)}/>
+        )}
         <BottomNavBar />
         </ReactMapGL>
     </div>
@@ -83,7 +128,7 @@ const Map = () => {
 
 export default Map
 
-const LocationMarker = ({location}) => {
+const LocationMarker = ({location, handleClick}) => {
 
     const latlng = new mapboxgl.LngLat(location.longitude, location.latitude)
     return (
@@ -92,23 +137,78 @@ const LocationMarker = ({location}) => {
             longitude={latlng.lng}
             style={{zIndex: 0}}
         >
-            <Room fontSize="small" color='secondary' />
+            <Room fontSize="small" color='secondary' onClick={handleClick} />
         </Marker>
     )
 }
 
-const SearchPanel = () => {
+const SearchPanel = ({callback, onChange}) => {
     const classes = useStyles()
-
+    const [key, setKey] = React.useState('');
+    const [results, setResults] = React.useState(null)
+    const handleChange = (e) => {
+        setKey(e.target.value)
+        setResults(null)
+    }
+    const handleSubmit = (e) =>{
+        e.preventDefault()
+        const search_results = callback(key)
+        setResults(search_results)
+    }
+    const handleClick = (location) => {
+        const latitude = parseFloat(location.latitude)
+        const longitude = parseFloat(location.longitude)
+        const zoom = 16
+        onChange(latitude, longitude, zoom, location)
+        setResults(null)
+    }
     return(
-        <Paper component='form' className={classes.search_root}>
-            <IconButton className={classes.iconButton} aria-label="menu">
-                <Search />
-            </IconButton>
-            <InputBase
-                className={classes.search_input}
-                placeholder="Search for a Place"
-            />
-        </Paper>
+        <React.Fragment>
+            <Paper component='form' className={classes.search_root} onSubmit={handleSubmit}>
+                <IconButton className={classes.iconButton} aria-label="menu">
+                    <Search />
+                </IconButton>
+                <InputBase
+                    className={classes.search_input}
+                    placeholder="Search for a Place"
+                    value={key}
+                    onChange={handleChange}
+                    />
+            </Paper>
+            {
+                results && (
+                    <List component={Paper} dense style={{maxHeight: 350, width: '90vw', overflowY: 'scroll', margin: '-10px auto'}}>
+                    {results?.map((result, index) => (
+                        <ListItem key={index} button onClick={() => handleClick(result)}>
+                            <ListItemText primary={result.name} secondary={result.address} />
+                        </ListItem>
+                    ))}
+                    </List>
+                )
+            }
+        </React.Fragment>
+    )
+}
+
+const SelectedLocation = ({location, onClose}) => {
+    console.log(location)
+    const classes = useStyles()
+    return (
+        <Slide direction="up" in={true} mountOnEnter unmountOnExit>
+            <Paper className={classes.selected} >
+                <div className={classes.selectedPanel}>
+                    <div>
+                        <Typography className={classes.selected_name}>{location.name}</Typography>
+                        <Typography variant='caption' color='textSecondary'>{location.address}</Typography>
+                    </div>
+                    <IconButton size='small' color='inherit'>
+                        <ArrowForward />
+                    </IconButton>
+                </div>
+                <IconButton size='small' onClick={onClose} style={{position: 'absolute', right: -10, top: -10, backgroundColor: '#0C1821'}}>
+                    <Close style={{fontSize: 15, color: '#fff'}}/>
+                </IconButton>
+            </Paper>
+        </Slide>
     )
 }

@@ -76,7 +76,6 @@ const useStyles = makeStyles((theme) =>({
 
 function Weather({weather}) {
     const classes = useStyles()
-    console.log(weather)
     
     return (
         <div className={classes.root}>
@@ -90,7 +89,7 @@ function Weather({weather}) {
                     <Typography className={classes.weather_temp}>{weather.current.temp}°C</Typography>
                 </div>
                 <div className={classes.weather_icon_desc}>
-                    <img src={`http://openweathermap.org/img/wn/${weather.current.weather[0].icon}@2x.png`} alt='icon' />
+                    <img src={`./icons/${weather.current.weather[0].icon}@2x.png`} alt='icon' />
                     <Typography variant='button' className={classes.weather_desc}>{weather.current.weather[0].description}</Typography>
                 </div>
                 <div className={classes.weather_location_temp}>
@@ -130,7 +129,7 @@ const WeatherDaily = ({weather}) =>{
                 {convertWithDay(weather.dt)}
             </Typography>
             <div className={classes.weather_day_component}>
-                <img src={`http://openweathermap.org/img/wn/${weather.weather[0].icon}.png`} alt='icon' className={classes.weather_icon}/>
+                <img src={`./icons/${weather.weather[0].icon}@2x.png`} alt='icon' className={classes.weather_icon}/>
                 <div>
                 <Typography className={classes.weather_temp_daily}>{weather.temp.day}°C</Typography>
                 <Typography className={classes.weather_subtitle}>Feels like {weather.feels_like.day}°C. {weather.weather[0].description}<br/></Typography>

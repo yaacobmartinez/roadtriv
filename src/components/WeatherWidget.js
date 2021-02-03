@@ -34,7 +34,7 @@ function WeatherWidget({current}) {
     }
     return (
         <Paper className={classes.root} component={Link} to='/weather'>
-            <img src={`http://openweathermap.org/img/wn/${current.weather[0].icon}.png`} alt='icon' className={classes.weather_icon} />
+            <img src={`./icons/${current.weather[0].icon}@2x.png`} alt='icon' className={classes.weather_icon} />
             <div>
                 <Typography className={classes.weather_temp}>{current.temp}°C</Typography>
                 <Typography className={classes.weather_subtitle}>Feels like {current.feels_like}°C. {current.weather[0].description}<br/></Typography>

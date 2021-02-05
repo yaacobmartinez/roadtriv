@@ -1,14 +1,18 @@
 import React from 'react'
-import ReactMapGL, {Marker} from 'react-map-gl'
+import { StaticMap, } from 'react-map-gl'
 import 'mapbox-gl/dist/mapbox-gl.css';
-import mapboxgl from 'mapbox-gl';
+// import mapboxgl from 'mapbox-gl';
 import axios from 'axios';
 import BottomNavBar from './BottomNavBar';
-import { ArrowForward,  Close, Room, Search } from '@material-ui/icons';
+import { ArrowForward,  Close, Search } from '@material-ui/icons';
 import { IconButton, InputBase, List, ListItem, ListItemText, makeStyles, Paper, Slide, Typography } from '@material-ui/core'
 import Lottie from 'lottie-react'
 import animationData from '../46997-color-preloader.json'
-import DeckGL, { PathLayer } from 'deck.gl'
+import DeckGL, { IconLayer, TripsLayer } from 'deck.gl'
+
+const ICON_MAPPING = {
+    marker: {x: 0, y: 0, width: 128, height: 128, mask: true}
+  };
 
 const useStyles = makeStyles((theme)=>({
     loader: {
@@ -46,25 +50,21 @@ const useStyles = makeStyles((theme)=>({
         lineHeight: 1
     }
 }))
+
 const Map = () => {
     const classes = useStyles()
-    // const geolocateControlStyle= {
-    //     right: 10,
-    //     bottom: 90,
-    //     position: 'absolute',
-    //     width: 29,
-    //     borderRadius: 20
-    //   };
-    const [coords, setCoords] = React.useState({
+    const initialCoords= {
         height: "100vh",
         width: "100vw",
         longitude: 120.8160, 
         latitude: 14.8527,
-        zoom: 13
-      })
+        zoom: 16
+      };
+    const [coords, setCoords] = React.useState(initialCoords)
       const [locations, setLocations] = React.useState(null)
       const [markers, setMarkers] = React.useState(null)
       const [selectedLocation, setSelectedLocation] = React.useState(null)
+      const [navigationPath, setNavigationPath] = React.useState(null)
       const getLocations = React.useCallback(async () => {
         const res = await axios.get(`/locations`)
         if(!res.data.success) return
@@ -77,6 +77,17 @@ const Map = () => {
         if (!cancelled) getLocations()
         return () => cancelled = true
       },[getLocations])
+      
+      const navigate = async (location) => {
+            navigator.geolocation.getCurrentPosition( async function(position) {
+                // console.log(position.coords)
+                // console.log(location)
+                setCoords({...coords, latitude: position.coords.latitude, longitude: position.coords.longitude })
+                const res = await axios.get(`https://api.mapbox.com/directions/v5/mapbox/walking/${position.coords.longitude},${position.coords.latitude};${location.longitude},${location.latitude}?geometries=geojson&steps=true&access_token=pk.eyJ1IjoieWFhY29ibWFydGluZXoiLCJhIjoiY2tjNDlqYTB1MDVyajMzcmlvMjMxdW01OCJ9.6S3KsotDYdk70Y9zmxw28w`)
+                console.log(res.data)
+                setNavigationPath([res.data.routes[0].geometry])
+            });
+      }
       
       const filterByValue = (array, string) => {
         return array.filter(o => {     	
@@ -93,48 +104,42 @@ const Map = () => {
       const handleSearch = (key) => {
           return filterByValue(locations, key)
       } 
-
       const handleCoordinateChange = (latitude, longitude, zoom, location) =>{
         setMarkers(locations.filter((loc) => loc._id === location._id))
         setCoords({...coords, latitude, longitude, zoom})
         setSelectedLocation(location)
       }
       if (!markers) return <Lottie animationData={animationData} className={classes.loader} />
-      const data = [{
-        name: "random-name",
-        color: [101, 147, 245],
-        path:[
-            [
-              120.817672,
-              14.854427
-            ],
-            [
-              120.817354,
-              14.854399
-            ],
-            [
-              120.817056,
-              14.854434
-            ],
-            [
-              120.816739,
-              14.85461
-            ]
-          ]
-        }
-       ]
-       const layer = [
-        new PathLayer({
-         id: "path-layer",
-         data,
-         getWidth: data => 1,
-         getColor: data => data.color,
-         widthMinPixels: 3
+       const layer = new TripsLayer({
+            id: "trips-layer",
+            data: navigationPath,
+            // data,
+            getPath: d => d.coordinates.map(p => p),
+            getColor: [15, 89, 225],
+            opacity: 0.1,
+            widthMinPixels: 6,
+            rounded: true,
        })
-      ]
+      
+      const mkrs = new IconLayer({
+        id: 'icon-layer',
+        data: locations,
+        pickable: true,
+        // iconAtlas and iconMapping are required
+        // getIcon: return a string
+        iconAtlas: './icons/01d@2x.png',
+        iconMapping: ICON_MAPPING,
+        getIcon: d => 'marker',
+        onClick: ({object}) => setSelectedLocation(object),
+        sizeScale: 8,
+        getPosition: d => [parseFloat(d.longitude), parseFloat(d.latitude)],
+        getSize: d => 5,
+        getColor: [4214, 140, 0]
+      });
     return (
     <div>
         <DeckGL
+            layers={[layer, mkrs]}
             initialViewState={{
                 longitude: coords.longitude,
                 latitude: coords.latitude, 
@@ -143,50 +148,22 @@ const Map = () => {
             height={coords.height}
             width={coords.width}
             controller={true}
-            layers={layer}
         >
-
-            <ReactMapGL
-            // {...coords}
-            mapboxApiAccessToken='pk.eyJ1IjoieWFhY29ibWFydGluZXoiLCJhIjoiY2tjNDlqYTB1MDVyajMzcmlvMjMxdW01OCJ9.6S3KsotDYdk70Y9zmxw28w'
-            mapStyle='mapbox://styles/mapbox/streets-v9'
-            onViewportChange={setCoords}>
-                {markers?.map((location, index) => (
-                    <LocationMarker key={index} location={location} handleClick={()=> setSelectedLocation(location)}/>
-                    ))}
-            </ReactMapGL>
-            {/* <GeolocateControl
-                style={geolocateControlStyle}
-                positionOptions={{enableHighAccuracy: true}}
-                trackUserLocation={true}
-                fitBoundsOptions={{maxZoom: 13}}
-                auto
-            /> */}
+            <StaticMap
+                reuseMaps 
+                mapboxApiAccessToken='pk.eyJ1IjoieWFhY29ibWFydGluZXoiLCJhIjoiY2tjNDlqYTB1MDVyajMzcmlvMjMxdW01OCJ9.6S3KsotDYdk70Y9zmxw28w'
+                mapStyle='mapbox://styles/mapbox/streets-v9' />
         <SearchPanel callback={handleSearch} onChange={handleCoordinateChange}/>
+        <BottomNavBar />
         </DeckGL>
         {selectedLocation && (
-            <SelectedLocation location={selectedLocation} onClose={() => setSelectedLocation(null)}/>
+            <SelectedLocation location={selectedLocation} navigate={navigate} onClose={() => {setSelectedLocation(null); setMarkers(locations);}}/>
         )}
-        <BottomNavBar />
     </div>
     );
 }
 
 export default Map
-
-const LocationMarker = ({location, handleClick}) => {
-
-    const latlng = new mapboxgl.LngLat(location.longitude, location.latitude)
-    return (
-        <Marker 
-            latitude={latlng.lat}
-            longitude={latlng.lng}
-            style={{zIndex: 0}}
-        >
-            <Room fontSize="small" color='secondary' onClick={handleClick} />
-        </Marker>
-    )
-}
 
 const SearchPanel = ({callback, onChange}) => {
     const classes = useStyles()
@@ -236,8 +213,7 @@ const SearchPanel = ({callback, onChange}) => {
     )
 }
 
-const SelectedLocation = ({location, onClose}) => {
-    console.log(location)
+const SelectedLocation = ({location, onClose, navigate}) => {
     const classes = useStyles()
     return (
         <Slide direction="up" in={true} mountOnEnter unmountOnExit>
@@ -247,7 +223,7 @@ const SelectedLocation = ({location, onClose}) => {
                         <Typography className={classes.selected_name}>{location.name}</Typography>
                         <Typography variant='caption' color='textSecondary'>{location.address}</Typography>
                     </div>
-                    <IconButton size='small' color='inherit'>
+                    <IconButton size='small' color='inherit' onClick={() => navigate(location)}>
                         <ArrowForward />
                     </IconButton>
                 </div>

@@ -89,11 +89,13 @@ function Home({weather}) {
     const categories = ['Places', 'Culture', 'Food']
     const [categorySelected, setCategorySelected] = React.useState('Places')
     const [featuredPlaces, setFeaturedPlaces] = React.useState(null)
+    const [featuredFood, setFeaturedFood] = React.useState(null)
     const [images, setImages] = React.useState(null)
     const getplaces = React.useCallback( async() => {
         const res = await axios.get(`/locations`)
         if (!res.data.success) return 
         setFeaturedPlaces((res.data.locations).slice(10,28))
+        setFeaturedFood(res.data.locations.filter((p) =>p.category === 'Café' || p.category === 'Restaurant'))
     },[])
 
     const getImages = React.useCallback( async() => {
@@ -163,7 +165,7 @@ function Home({weather}) {
                     {categorySelected === 'Culture' && cultures.map((culture, index) => (
                         <InfoPanel key={index} info={culture}/>
                     ))}
-                    {categorySelected === 'Food' && images && featuredPlaces?.filter((p) =>p.category === 'Café' || p.category === 'Restaurant').map((place, index) => (
+                    {categorySelected === 'Food' && images && featuredFood?.map((place, index) => (
                         <Panel key={index} panel={place} images={images.filter((image) => image.location === place._id)}/>
                     ))}
                 </div>
@@ -179,7 +181,7 @@ export default Home
 
 const Panel = ({panel, images}) => {
     const classes = useStyles() 
-    const image = images[0].url
+    const image = images.length > 0 ? images[0].url : `./dummy.jpeg`
     const [open, setOpen] = React.useState(false)
     return (
         <React.Fragment>

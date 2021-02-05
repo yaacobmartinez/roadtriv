@@ -56,7 +56,7 @@ const Location = ({location, images, open, handleClose}) => {
                     </Toolbar>
                 </AppBar>
                 <div className={classes.panel}>
-                    <img src={images[0].url} alt='primary' 
+                    <img src={images.length > 0 ? images[0].url : `./dummy.jpeg`} alt='primary' 
                         className={classes.image}
                         onClick={() =>setIsViewerOpen(true)}    
                     />

@@ -1,5 +1,5 @@
 import React from 'react'
-import ReactMapGL, {Marker, GeolocateControl,} from 'react-map-gl'
+import ReactMapGL, {Marker} from 'react-map-gl'
 import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl from 'mapbox-gl';
 import axios from 'axios';
@@ -8,6 +8,7 @@ import { ArrowForward,  Close, Room, Search } from '@material-ui/icons';
 import { IconButton, InputBase, List, ListItem, ListItemText, makeStyles, Paper, Slide, Typography } from '@material-ui/core'
 import Lottie from 'lottie-react'
 import animationData from '../46997-color-preloader.json'
+import DeckGL, { PathLayer } from 'deck.gl'
 
 const useStyles = makeStyles((theme)=>({
     loader: {
@@ -47,13 +48,13 @@ const useStyles = makeStyles((theme)=>({
 }))
 const Map = () => {
     const classes = useStyles()
-    const geolocateControlStyle= {
-        right: 10,
-        bottom: 90,
-        position: 'absolute',
-        width: 29,
-        borderRadius: 20
-      };
+    // const geolocateControlStyle= {
+    //     right: 10,
+    //     bottom: 90,
+    //     position: 'absolute',
+    //     width: 29,
+    //     borderRadius: 20
+    //   };
     const [coords, setCoords] = React.useState({
         height: "100vh",
         width: "100vw",
@@ -99,29 +100,74 @@ const Map = () => {
         setSelectedLocation(location)
       }
       if (!markers) return <Lottie animationData={animationData} className={classes.loader} />
+      const data = [{
+        name: "random-name",
+        color: [101, 147, 245],
+        path:[
+            [
+              120.817672,
+              14.854427
+            ],
+            [
+              120.817354,
+              14.854399
+            ],
+            [
+              120.817056,
+              14.854434
+            ],
+            [
+              120.816739,
+              14.85461
+            ]
+          ]
+        }
+       ]
+       const layer = [
+        new PathLayer({
+         id: "path-layer",
+         data,
+         getWidth: data => 1,
+         getColor: data => data.color,
+         widthMinPixels: 3
+       })
+      ]
     return (
     <div>
-        <ReactMapGL
-        {...coords}
-        mapboxApiAccessToken='pk.eyJ1IjoieWFhY29ibWFydGluZXoiLCJhIjoiY2tjNDlqYTB1MDVyajMzcmlvMjMxdW01OCJ9.6S3KsotDYdk70Y9zmxw28w'
-        mapStyle='mapbox://styles/mapbox/streets-v9'
-        onViewportChange={setCoords}>
-            <GeolocateControl
+        <DeckGL
+            initialViewState={{
+                longitude: coords.longitude,
+                latitude: coords.latitude, 
+                zoom: coords.zoom
+            }}
+            height={coords.height}
+            width={coords.width}
+            controller={true}
+            layers={layer}
+        >
+
+            <ReactMapGL
+            // {...coords}
+            mapboxApiAccessToken='pk.eyJ1IjoieWFhY29ibWFydGluZXoiLCJhIjoiY2tjNDlqYTB1MDVyajMzcmlvMjMxdW01OCJ9.6S3KsotDYdk70Y9zmxw28w'
+            mapStyle='mapbox://styles/mapbox/streets-v9'
+            onViewportChange={setCoords}>
+                {markers?.map((location, index) => (
+                    <LocationMarker key={index} location={location} handleClick={()=> setSelectedLocation(location)}/>
+                    ))}
+            </ReactMapGL>
+            {/* <GeolocateControl
                 style={geolocateControlStyle}
                 positionOptions={{enableHighAccuracy: true}}
                 trackUserLocation={true}
                 fitBoundsOptions={{maxZoom: 13}}
                 auto
-            />
-            {markers?.map((location, index) => (
-                <LocationMarker key={index} location={location} handleClick={()=> setSelectedLocation(location)}/>
-                ))}
+            /> */}
         <SearchPanel callback={handleSearch} onChange={handleCoordinateChange}/>
+        </DeckGL>
         {selectedLocation && (
             <SelectedLocation location={selectedLocation} onClose={() => setSelectedLocation(null)}/>
         )}
         <BottomNavBar />
-        </ReactMapGL>
     </div>
     );
 }

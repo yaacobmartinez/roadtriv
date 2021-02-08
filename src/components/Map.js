@@ -61,16 +61,19 @@ const Map = () => {
         zoom: 16
       };
     const [coords, setCoords] = React.useState(initialCoords)
-      const [locations, setLocations] = React.useState(null)
-      const [markers, setMarkers] = React.useState(null)
-      const [selectedLocation, setSelectedLocation] = React.useState(null)
-      const [navigationPath, setNavigationPath] = React.useState(null)
-      const getLocations = React.useCallback(async () => {
-        const res = await axios.get(`/locations`)
+    const [locations, setLocations] = React.useState(null)
+    const [markers, setMarkers] = React.useState(null)
+    const [selectedLocation, setSelectedLocation] = React.useState(null)
+    const [navigationPath, setNavigationPath] = React.useState(null)
+    const [hasSearch, setHasSearch] = React.useState(true)
+    const [currentBearing, setCurrentBearing] = React.useState(0)
+    const [route, setRoute] = React.useState(null)
+    const getLocations = React.useCallback(async () => {
+    const res = await axios.get(`/locations`)
         if(!res.data.success) return
         setLocations(res.data.locations)
         setMarkers(res.data.locations)
-      },[])
+    },[])
     
       React.useEffect(() => {
         let cancelled = false
@@ -83,8 +86,10 @@ const Map = () => {
                 // console.log(position.coords)
                 // console.log(location)
                 setCoords({...coords, latitude: position.coords.latitude, longitude: position.coords.longitude })
-                const res = await axios.get(`https://api.mapbox.com/directions/v5/mapbox/walking/${position.coords.longitude},${position.coords.latitude};${location.longitude},${location.latitude}?geometries=geojson&steps=true&access_token=pk.eyJ1IjoieWFhY29ibWFydGluZXoiLCJhIjoiY2tjNDlqYTB1MDVyajMzcmlvMjMxdW01OCJ9.6S3KsotDYdk70Y9zmxw28w`)
-                console.log(res.data)
+                const res = await axios.get(`https://api.mapbox.com/directions/v5/mapbox/driving/${position.coords.longitude},${position.coords.latitude};${location.longitude},${location.latitude}?geometries=geojson&steps=true&access_token=pk.eyJ1IjoieWFhY29ibWFydGluZXoiLCJhIjoiY2tjNDlqYTB1MDVyajMzcmlvMjMxdW01OCJ9.6S3KsotDYdk70Y9zmxw28w`)
+                // console.log(res.data)
+                setRoute(res.data.routes[0])
+                setCurrentBearing(res.data.routes[0].legs[0].steps[0].intersections[0].bearings[0])
                 setNavigationPath([res.data.routes[0].geometry])
             });
       }
@@ -130,7 +135,7 @@ const Map = () => {
         iconAtlas: './icons/01d@2x.png',
         iconMapping: ICON_MAPPING,
         getIcon: d => 'marker',
-        onClick: ({object}) => setSelectedLocation(object),
+        onClick: ({object}) => {setSelectedLocation(object); setHasSearch(false)},
         sizeScale: 8,
         getPosition: d => [parseFloat(d.longitude), parseFloat(d.latitude)],
         getSize: d => 5,
@@ -143,21 +148,29 @@ const Map = () => {
             initialViewState={{
                 longitude: coords.longitude,
                 latitude: coords.latitude, 
-                zoom: coords.zoom
+                zoom: coords.zoom,
+                bearing: currentBearing, 
+                pitch: navigationPath ? 60 : 0
             }}
             height={coords.height}
             width={coords.width}
             controller={true}
         >
+        {/* {route && (
+            <Marker latitude={coords.latitude} longitude={coords.longitude}>
+                <img src={`./navigation.png`} alt='nav' style={{width: 30, height: 30}} />
+            </Marker>
+        )} */}
             <StaticMap
                 reuseMaps 
                 mapboxApiAccessToken='pk.eyJ1IjoieWFhY29ibWFydGluZXoiLCJhIjoiY2tjNDlqYTB1MDVyajMzcmlvMjMxdW01OCJ9.6S3KsotDYdk70Y9zmxw28w'
                 mapStyle='mapbox://styles/mapbox/streets-v9' />
-        <SearchPanel callback={handleSearch} onChange={handleCoordinateChange}/>
+        { hasSearch && <SearchPanel callback={handleSearch} onChange={handleCoordinateChange}/> }
+        { !hasSearch && route && <RouteInfo route={route}/> }
         <BottomNavBar />
         </DeckGL>
         {selectedLocation && (
-            <SelectedLocation location={selectedLocation} navigate={navigate} onClose={() => {setSelectedLocation(null); setMarkers(locations);}}/>
+            <SelectedLocation location={selectedLocation} navigate={navigate} onClose={() => {setSelectedLocation(null); setMarkers(locations); setHasSearch(true); setNavigationPath(null); setCoords(initialCoords)}}/>
         )}
     </div>
     );
@@ -165,6 +178,38 @@ const Map = () => {
 
 export default Map
 
+const RouteInfo = ({route}) => {
+    // const classes = useStyles()
+    const getDistance = distance => {
+        let unit = 'm'
+        if (distance > 1000) {
+            unit = 'km'
+            distance /= 1000
+        }
+        return parseFloat(distance).toFixed(2) + ` ${unit}`
+    }
+    const getDuration = duration => {
+        let unit = 'min'
+        let time = 0
+        if (duration > 3600) {
+            time = Math.floor(duration / 60 / 60)
+            unit = 'hr/s'
+            return time + ` ${unit}`
+        }
+        time = Math.floor(duration / 60)
+        return time + ` ${unit}`
+    }
+    return(
+        <Paper style={{height: 100, width:'94vw', margin: '1vh 3vw'}}>
+            <div style={{padding: 10}}>
+                <Typography variant='h6'>By Driving</Typography>
+                <Typography variant='subtitle2'>Distance: {getDistance(route.distance)}</Typography>
+                <Typography variant='subtitle2'>Duration: {getDuration(route.duration)} (estimated)</Typography>
+            </div>
+        </Paper>
+    )
+
+}
 const SearchPanel = ({callback, onChange}) => {
     const classes = useStyles()
     const [key, setKey] = React.useState('');

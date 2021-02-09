@@ -141,10 +141,22 @@ const Map = () => {
         getSize: d => 5,
         getColor: [4214, 140, 0]
       });
+
+      const currentLoc = new IconLayer({
+        id: 'location-icon', 
+        data: [coords],
+        iconAtlas: './icons/icon-atlas.png',
+        iconMapping: ICON_MAPPING,
+        getIcon: d => 'marker',
+        sizeScale: 8, 
+        getPosition: d => [d.longitude, d.latitude],
+        getSize: d => 5,
+        getColor: [92, 122, 255]
+      })
     return (
     <div>
         <DeckGL
-            layers={[layer, mkrs]}
+            layers={[layer, mkrs, navigationPath && currentLoc]}
             initialViewState={{
                 longitude: coords.longitude,
                 latitude: coords.latitude, 
@@ -156,11 +168,6 @@ const Map = () => {
             width={coords.width}
             controller={true}
         >
-        {/* {route && (
-            <Marker latitude={coords.latitude} longitude={coords.longitude}>
-                <img src={`./navigation.png`} alt='nav' style={{width: 30, height: 30}} />
-            </Marker>
-        )} */}
             <StaticMap
                 reuseMaps 
                 mapboxApiAccessToken='pk.eyJ1IjoieWFhY29ibWFydGluZXoiLCJhIjoiY2tjNDlqYTB1MDVyajMzcmlvMjMxdW01OCJ9.6S3KsotDYdk70Y9zmxw28w'

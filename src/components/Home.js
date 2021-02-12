@@ -91,6 +91,7 @@ function Home({weather}) {
     const [featuredPlaces, setFeaturedPlaces] = React.useState(null)
     const [featuredFood, setFeaturedFood] = React.useState(null)
     const [images, setImages] = React.useState(null)
+    const [audios, setAudios] = React.useState(null)
     const getplaces = React.useCallback( async() => {
         const res = await axios.get(`/locations`)
         if (!res.data.success) return 
@@ -104,14 +105,21 @@ function Home({weather}) {
         setImages(res.data.images)
     }, [])
 
+    const getAudios = React.useCallback( async() => {
+        const res = await axios.get(`/audios`)
+        if (!res.data.success) return 
+        setAudios(res.data.audios)
+    }, [])
+
     React.useEffect(() => {
         let cancelled = false
         if (!cancelled) {
             getImages();
             getplaces();
+            getAudios();
         }
         return () => cancelled = true
-    }, [getplaces, getImages])
+    }, [getplaces, getImages, getAudios])
 
     const cultures = [
         {
@@ -160,13 +168,19 @@ function Home({weather}) {
                 </div>
                 <div className={classes.panels}>
                     {categorySelected === 'Places' && images && featuredPlaces?.map((place, index) => (
-                        <Panel key={index} panel={place} images={images.filter((image) => image.location === place._id)}/>
+                        <Panel key={index} panel={place} 
+                            images={images.filter((image) => image.location === place._id)} 
+                            audios={audios.filter((audio) => audio.location === place._id)}
+                        />
                     ))}
                     {categorySelected === 'Culture' && cultures.map((culture, index) => (
                         <InfoPanel key={index} info={culture}/>
                     ))}
                     {categorySelected === 'Food' && images && featuredFood?.map((place, index) => (
-                        <Panel key={index} panel={place} images={images.filter((image) => image.location === place._id)}/>
+                        <Panel key={index} panel={place} 
+                            images={images.filter((image) => image.location === place._id)}
+                            audios={audios.filter((audio) => audio.location === place._id)}
+                        />
                     ))}
                 </div>
             </div>
@@ -179,7 +193,7 @@ function Home({weather}) {
 
 export default Home
 
-const Panel = ({panel, images}) => {
+const Panel = ({panel, images, audios}) => {
     const classes = useStyles() 
     const image = images.length > 0 ? images[0].url : `./dummy.jpeg`
     const [open, setOpen] = React.useState(false)
@@ -191,7 +205,7 @@ const Panel = ({panel, images}) => {
                     <Typography variant='body2'>{panel.name}</Typography>
                 </div>
             </div>
-            <Location location={panel} images={images} open={open} handleClose={() => setOpen(false)} />
+            <Location location={panel} images={images} open={open} handleClose={() => setOpen(false)} audios={audios}/>
         </React.Fragment>
     )
 } 

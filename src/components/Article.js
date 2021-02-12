@@ -6,6 +6,7 @@ import Bulakenyo from './Articles/Bulakenyo';
 import Festivals from './Articles/Festivals';
 import Preparation from './Articles/Preparation';
 import Hotlines from './Articles/Hotlines';
+import Delicacies from './Articles/Delicacies';
 
 function Article({slug}) {
 
@@ -28,6 +29,9 @@ function Article({slug}) {
             break;
         case `Hotlines` : 
             article = <Hotlines />
+            break;
+        case `Delicacies` : 
+            article = <Delicacies />
             break;
         default:
             article = <Default />

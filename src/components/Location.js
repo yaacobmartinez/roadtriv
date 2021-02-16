@@ -1,5 +1,5 @@
 import { AppBar, Dialog, IconButton, makeStyles, Slide, Toolbar, Typography } from '@material-ui/core';
-import { ArrowBack, PlayArrow, Star, Stars, Stop } from '@material-ui/icons';
+import { ArrowBack, PlayArrow, Star, Stop } from '@material-ui/icons';
 import React from 'react'
 import LocationMap from './LocationMap';
 import ImageViewer from "react-simple-image-viewer";

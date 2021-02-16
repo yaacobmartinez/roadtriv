@@ -7,6 +7,7 @@ import Festivals from './Articles/Festivals';
 import Preparation from './Articles/Preparation';
 import Hotlines from './Articles/Hotlines';
 import Delicacies from './Articles/Delicacies';
+import People from './Articles/People';
 
 function Article({slug}) {
 
@@ -32,6 +33,9 @@ function Article({slug}) {
             break;
         case `Delicacies` : 
             article = <Delicacies />
+            break;
+        case `People` : 
+            article = <People />
             break;
         default:
             article = <Default />

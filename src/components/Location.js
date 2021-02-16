@@ -1,5 +1,5 @@
 import { AppBar, Dialog, IconButton, makeStyles, Slide, Toolbar, Typography } from '@material-ui/core';
-import { ArrowBack, PlayArrow, Stop } from '@material-ui/icons';
+import { ArrowBack, PlayArrow, Star, Stars, Stop } from '@material-ui/icons';
 import React from 'react'
 import LocationMap from './LocationMap';
 import ImageViewer from "react-simple-image-viewer";
@@ -75,6 +75,11 @@ const Location = ({location, images, open, handleClose, audios}) => {
                     </IconButton>
                     <div className={classes.panel_information}>
                         <Typography className={classes.panel_information_title}>{location.name}</Typography>
+
+                        <Typography variant='button' style={{fontWeight: 'bold'}} color='textSecondary' gutterBottom>
+                        {[...Array(location.rating).keys()].map((star, index) => (
+                            <Star key={index} style={{ fontSize: 15, color: 'gold' }} />
+                        ))} </Typography><br />
                         <Typography variant='button' style={{fontWeight: 'bold'}} color='textSecondary' gutterBottom>{location.category}</Typography><br/>
                         <Typography variant='caption' gutterBottom >{location.address}</Typography>
                         <Typography className={classes.panel_information_description}>Description</Typography>

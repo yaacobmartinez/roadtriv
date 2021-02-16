@@ -38,6 +38,7 @@ function Search() {
     const classes = useStyles()
     const [locations, setLocations] = React.useState(null)
     const [images, setImages] = React.useState(null)
+    const [audios, setAudios] = React.useState(null)
     const getLocations = React.useCallback(async () => {
         const res = await axios.get(`/locations`)
         if(!res.data.success) return
@@ -47,16 +48,21 @@ function Search() {
         const res = await axios.get(`/images`)
         if(!res.data.success) return
         setImages(res.data.images)
-      },[])
-    
+    },[])
+    const getAudios = React.useCallback( async() => {
+        const res = await axios.get(`/audios`)
+        if (!res.data.success) return 
+        setAudios(res.data.audios)
+    }, [])
     React.useEffect(() => {
         let cancelled = false
         if (!cancelled) {
-            getLocations()
-            getImages()
+            getImages();
+            getLocations();
+            getAudios();
         }
         return () => cancelled = true
-    },[getLocations, getImages])
+    }, [getLocations, getImages, getAudios])
 
     const filterByValue = (array, string) => {
         return array.filter(o => {     	
@@ -126,6 +132,7 @@ function Search() {
                         location={selectedLocation} 
                         images={images.filter((i) => i.location === selectedLocation._id)} 
                         handleClose={() => setSelectedLocation(null)}
+                        audios={audios.filter((audio) => audio.location === selectedLocation._id)}
                     />
                 )
             }

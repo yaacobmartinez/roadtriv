@@ -1,7 +1,7 @@
 import { makeStyles, Typography } from '@material-ui/core'
 import React from 'react'
 import { Link, useHistory } from 'react-router-dom'
-import Image from '../appbg_green.jpg'
+import Image from '../barasoainchurch.jpg'
 
 const useStyles = makeStyles((theme) => ({
     root: {
